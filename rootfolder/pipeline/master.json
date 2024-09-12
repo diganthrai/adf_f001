@@ -19,7 +19,7 @@
 				}
 			},
 			{
-				"name": "Scripttolog",
+				"name": "Scripttologalltrigger",
 				"type": "Script",
 				"dependsOn": [
 					{
