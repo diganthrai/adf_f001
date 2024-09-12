@@ -1,0 +1,17 @@
+{
+	"name": "SqlServerlog",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "SqlServer",
+		"typeProperties": {
+			"server": "server01d.database.windows.net",
+			"database": "base01",
+			"encrypt": "optional",
+			"trustServerCertificate": false,
+			"authenticationType": "SQL",
+			"userName": "sqladmin",
+			"encryptedCredential": "ew0KICAiVmVyc2lvbiI6ICIyMDE3LTExLTMwIiwNCiAgIlByb3RlY3Rpb25Nb2RlIjogIktleSIsDQogICJTZWNyZXRDb250ZW50VHlwZSI6ICJQbGFpbnRleHQiLA0KICAiQ3JlZGVudGlhbElkIjogIkRBVEFGQUNUT1JZQEQyNTg0ODBFLTJFQUUtNDM1MC04RkNDLTFBQTI4RjdFNURGQ18zNjM1NzE2Ni05MWJiLTQ0YzUtODRhMS01ZTZlODg1NDQ4YTAiDQp9"
+		}
+	}
+}

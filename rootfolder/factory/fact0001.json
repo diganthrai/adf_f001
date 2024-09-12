@@ -1,0 +1,9 @@
+{
+	"name": "fact0001",
+	"location": "southindia",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "43bad05b-1bcc-4323-95b5-e712c4db206c",
+		"tenantId": "88802e21-69e2-4d03-b8fa-c2f83e4a2136"
+	}
+}

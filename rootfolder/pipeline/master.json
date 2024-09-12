@@ -1,0 +1,70 @@
+{
+	"name": "master",
+	"properties": {
+		"activities": [
+			{
+				"name": "copyandgetMetadata",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "copyandgetMetadata",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "Scripttolog",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "copyandgetMetadata",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [
+					{
+						"name": "log",
+						"value": "test"
+					}
+				],
+				"linkedServiceName": {
+					"referenceName": "SqlServerlog",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": {
+								"value": "insert into logi.prac values(\r\n    '@{activity('copyandgetMetadata').output.pipelineReturnValue.triggertime}',\r\n    '@{activity('copyandgetMetadata').output.pipelineReturnValue.runid}',\r\n    '@{activity('copyandgetMetadata').output.pipelineReturnValue.lastModDate}')",
+								"type": "Expression"
+							}
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
+				}
+			}
+		],
+		"folder": {
+			"name": "copy and log the data"
+		},
+		"annotations": [],
+		"lastPublishTime": "2024-09-12T14:18:51Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

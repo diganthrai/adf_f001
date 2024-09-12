@@ -1,0 +1,152 @@
+{
+	"name": "amazonsplit",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "amzon_src",
+						"type": "DatasetReference"
+					},
+					"name": "source"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "tgt2op",
+						"type": "DatasetReference"
+					},
+					"name": "sinkM"
+				},
+				{
+					"dataset": {
+						"referenceName": "tgt2op",
+						"type": "DatasetReference"
+					},
+					"name": "sinkC"
+				},
+				{
+					"dataset": {
+						"referenceName": "tgt2op",
+						"type": "DatasetReference"
+					},
+					"name": "sinkh"
+				}
+			],
+			"transformations": [
+				{
+					"name": "selectrequired"
+				},
+				{
+					"name": "filterH"
+				},
+				{
+					"name": "filterC"
+				},
+				{
+					"name": "filterM"
+				},
+				{
+					"name": "select1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          Region as string,",
+				"          Country as string,",
+				"          {Item Type} as string,",
+				"          {Sales Channel} as string,",
+				"          {Order Priority} as string,",
+				"          {Order Date} as date 'MM/dd/yyyy',",
+				"          {Order ID} as integer,",
+				"          {Ship Date} as date 'MM/dd/yyyy',",
+				"          {Units Sold} as integer,",
+				"          {Unit Price} as integer,",
+				"          {Unit Cost} as integer,",
+				"          {Total Revenue} as integer,",
+				"          {Total Cost} as integer,",
+				"          {Total Profit} as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     partitionBy('hash', 1)) ~> source",
+				"source select(mapColumn(",
+				"          Region,",
+				"          Country,",
+				"          {Item Type},",
+				"          {Sales Channel},",
+				"          {Order Priority},",
+				"          {Order Date},",
+				"          {Order ID},",
+				"          {Ship Date},",
+				"          {Units Sold},",
+				"          {Total Revenue},",
+				"          {Total Cost},",
+				"          {Total Profit}",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectrequired",
+				"selectrequired filter({Order Priority}==\"H\") ~> filterH",
+				"selectrequired filter({Order Priority}==\"C\") ~> filterC",
+				"selectrequired filter({Order Priority}==\"M\") ~> filterM",
+				"filterM select(mapColumn(",
+				"          Region,",
+				"          Country,",
+				"          {Item Type},",
+				"          {Sales Channel},",
+				"          {Order Priority},",
+				"          {Order Date},",
+				"          {Order ID},",
+				"          {Ship Date},",
+				"          {Units Sold},",
+				"          {Total Revenue},",
+				"          {Total Cost},",
+				"          {Total Profit}",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     saveOrder: 1,",
+				"     mapColumn(",
+				"          Region,",
+				"          Country,",
+				"          {Item Type},",
+				"          {Sales Channel},",
+				"          {Order Priority},",
+				"          {Order Date},",
+				"          {Order ID},",
+				"          {Ship Date},",
+				"          {Units Sold},",
+				"          {Total Revenue},",
+				"          {Total Cost},",
+				"          {Total Profit}",
+				"     ),",
+				"     partitionBy('hash', 1)) ~> sinkM",
+				"filterC sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     saveOrder: 2) ~> sinkC",
+				"filterH sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     truncate: true,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     saveOrder: 3) ~> sinkh"
+			]
+		}
+	}
+}
