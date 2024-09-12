@@ -1,0 +1,174 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "fact0001"
+		},
+		"AzureDataLakeStorage1_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'AzureDataLakeStorage1'"
+		},
+		"AzureDataLakeStorage2_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'AzureDataLakeStorage2'"
+		},
+		"SqlServer1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'SqlServer1'"
+		},
+		"SqlServerlog_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'SqlServerlog'"
+		},
+		"diaganthstorage_ls_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'diaganthstorage_ls'"
+		},
+		"tgt_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'tgt'"
+		},
+		"tgt2_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'tgt2'"
+		},
+		"AzureDataLakeStorage1_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://storageaccountfor01.dfs.core.windows.net/"
+		},
+		"AzureDataLakeStorage2_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://cat0ind0src.dfs.core.windows.net/"
+		},
+		"RestService1_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://reqres.in/api/users"
+		},
+		"SqlServerlog_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "server01d.database.windows.net"
+		},
+		"SqlServerlog_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "base01"
+		},
+		"SqlServerlog_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "sqladmin"
+		},
+		"diaganthstorage_ls_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://sqlstoragebox.blob.core.windows.net/"
+		},
+		"tgt_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://cat0ind0tgt.dfs.core.windows.net/"
+		},
+		"tgt2_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://storageaccountfor01.dfs.core.windows.net/"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "fact0001_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"AzureDataLakeStorage1_accountKey": {
+						"value": "[parameters('AzureDataLakeStorage1_accountKey')]"
+					},
+					"AzureDataLakeStorage2_accountKey": {
+						"value": "[parameters('AzureDataLakeStorage2_accountKey')]"
+					},
+					"SqlServer1_connectionString": {
+						"value": "[parameters('SqlServer1_connectionString')]"
+					},
+					"SqlServerlog_password": {
+						"value": "[parameters('SqlServerlog_password')]"
+					},
+					"diaganthstorage_ls_accountKey": {
+						"value": "[parameters('diaganthstorage_ls_accountKey')]"
+					},
+					"tgt_accountKey": {
+						"value": "[parameters('tgt_accountKey')]"
+					},
+					"tgt2_accountKey": {
+						"value": "[parameters('tgt2_accountKey')]"
+					},
+					"AzureDataLakeStorage1_properties_typeProperties_url": {
+						"value": "[parameters('AzureDataLakeStorage1_properties_typeProperties_url')]"
+					},
+					"AzureDataLakeStorage2_properties_typeProperties_url": {
+						"value": "[parameters('AzureDataLakeStorage2_properties_typeProperties_url')]"
+					},
+					"RestService1_properties_typeProperties_url": {
+						"value": "[parameters('RestService1_properties_typeProperties_url')]"
+					},
+					"SqlServerlog_properties_typeProperties_server": {
+						"value": "[parameters('SqlServerlog_properties_typeProperties_server')]"
+					},
+					"SqlServerlog_properties_typeProperties_database": {
+						"value": "[parameters('SqlServerlog_properties_typeProperties_database')]"
+					},
+					"SqlServerlog_properties_typeProperties_userName": {
+						"value": "[parameters('SqlServerlog_properties_typeProperties_userName')]"
+					},
+					"diaganthstorage_ls_properties_typeProperties_url": {
+						"value": "[parameters('diaganthstorage_ls_properties_typeProperties_url')]"
+					},
+					"tgt_properties_typeProperties_url": {
+						"value": "[parameters('tgt_properties_typeProperties_url')]"
+					},
+					"tgt2_properties_typeProperties_url": {
+						"value": "[parameters('tgt2_properties_typeProperties_url')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "fact0001_ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2024-03-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'fact0001_ArmTemplate_0')]"
+			]
+		}
+	]
+}

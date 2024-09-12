@@ -1,0 +1,498 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "fact0001"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/scd2')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "tgtuserscd",
+								"type": "DatasetReference"
+							},
+							"name": "TgtAsSrc"
+						},
+						{
+							"dataset": {
+								"referenceName": "sqlusersrc",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "tgtuserscd",
+								"type": "DatasetReference"
+							},
+							"name": "InsertFreshData"
+						},
+						{
+							"dataset": {
+								"referenceName": "tgtuserscd",
+								"type": "DatasetReference"
+							},
+							"name": "UpdateTheRecords"
+						},
+						{
+							"dataset": {
+								"referenceName": "tgtuserscd",
+								"type": "DatasetReference"
+							},
+							"name": "InsertOfUpdate"
+						}
+					],
+					"transformations": [
+						{
+							"name": "select1"
+						},
+						{
+							"name": "srcmd5"
+						},
+						{
+							"name": "tgtmd5"
+						},
+						{
+							"name": "lookup1"
+						},
+						{
+							"name": "tgtForUpdate"
+						},
+						{
+							"name": "AlterUpdate"
+						},
+						{
+							"name": "filterOutFreshData"
+						},
+						{
+							"name": "changeTheFlag"
+						},
+						{
+							"name": "select2"
+						},
+						{
+							"name": "derivedColumn1"
+						},
+						{
+							"name": "filterInFreshData"
+						},
+						{
+							"name": "selectFreshData"
+						},
+						{
+							"name": "AddTheDateAndFlagforfresh"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          customer_id as integer,",
+						"          customer_name as string,",
+						"          address as string,",
+						"          city as string,",
+						"          state as string,",
+						"          zip_code as string,",
+						"          effective_date as timestamp,",
+						"          end_date as timestamp,",
+						"          record_effective_date as timestamp,",
+						"          record_end_date as timestamp,",
+						"          current_record_ind as integer,",
+						"          surrogate_key as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> TgtAsSrc",
+						"source(output(",
+						"          customer_id as integer,",
+						"          customer_name as string,",
+						"          address as string,",
+						"          city as string,",
+						"          state as string,",
+						"          zip_code as string,",
+						"          effective_date as timestamp,",
+						"          end_date as timestamp,",
+						"          record_effective_date as timestamp,",
+						"          record_end_date as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> source1",
+						"TgtAsSrc select(mapColumn(",
+						"          tgt_customer_id = customer_id,",
+						"          tgt_customer_name = customer_name,",
+						"          tgt_address = address,",
+						"          tgt_city = city,",
+						"          tgt_state = state,",
+						"          tgt_zip_code = zip_code,",
+						"          tgt_effective_date = effective_date,",
+						"          tgt_end_date = end_date,",
+						"          tgt_record_effective_date = record_effective_date,",
+						"          tgt_record_end_date = record_end_date,",
+						"          tgt_current_record_ind = current_record_ind,",
+						"          tgt_surrogate_key = surrogate_key",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"source1 derive(scr_mds = md5(address,city,state,zip_code)) ~> srcmd5",
+						"select1 derive(tgt_md5 = md5(tgt_address,tgt_city,tgt_state,tgt_zip_code)) ~> tgtmd5",
+						"srcmd5, tgtmd5 lookup(customer_id == tgt_customer_id,",
+						"     multiple: false,",
+						"     pickup: 'any',",
+						"     broadcast: 'auto')~> lookup1",
+						"filterOutFreshData select(mapColumn(",
+						"          customer_id = tgt_customer_id,",
+						"          customer_name = tgt_customer_name,",
+						"          address = tgt_address,",
+						"          city = tgt_city,",
+						"          state = tgt_state,",
+						"          zip_code = tgt_zip_code,",
+						"          effective_date = tgt_effective_date,",
+						"          end_date = tgt_end_date,",
+						"          record_effective_date = tgt_record_effective_date,",
+						"          record_end_date = tgt_record_end_date,",
+						"          current_record_ind = tgt_current_record_ind,",
+						"          surrogate_key = tgt_surrogate_key",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> tgtForUpdate",
+						"changeTheFlag alterRow(updateIf(1==1)) ~> AlterUpdate",
+						"lookup1 filter(!isNull(tgt_customer_id) && (scr_mds!=tgt_md5)) ~> filterOutFreshData",
+						"tgtForUpdate derive(current_record_ind = \"N\",",
+						"          record_end_date = currentDate()) ~> changeTheFlag",
+						"filterOutFreshData select(mapColumn(",
+						"          customer_id,",
+						"          customer_name,",
+						"          address,",
+						"          city,",
+						"          state,",
+						"          zip_code,",
+						"          effective_date,",
+						"          end_date,",
+						"          record_effective_date = tgt_record_effective_date,",
+						"          record_end_date = tgt_record_end_date,",
+						"          current_record_ind = tgt_current_record_ind",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select2",
+						"select2 derive(record_effective_date = currentDate(),",
+						"          current_record_ind = \"Y\",",
+						"          record_end_date = toDate('9999-12-31','yyyy-MM-dd')) ~> derivedColumn1",
+						"lookup1 filter(isNull(tgt_customer_id)) ~> filterInFreshData",
+						"filterInFreshData select(mapColumn(",
+						"          customer_id,",
+						"          customer_name,",
+						"          address,",
+						"          city,",
+						"          state,",
+						"          zip_code,",
+						"          effective_date,",
+						"          end_date",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectFreshData",
+						"selectFreshData derive(record_effective_date = currentDate(),",
+						"          record_end_date = toDate('9999-12-31','yyyy-MM-dd'),",
+						"          current_record_ind = \"Y\") ~> AddTheDateAndFlagforfresh",
+						"AddTheDateAndFlagforfresh sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          customer_id as integer,",
+						"          customer_name as string,",
+						"          address as string,",
+						"          city as string,",
+						"          state as string,",
+						"          zip_code as string,",
+						"          effective_date as timestamp,",
+						"          end_date as timestamp,",
+						"          record_effective_date as timestamp,",
+						"          record_end_date as timestamp,",
+						"          current_record_ind as integer,",
+						"          surrogate_key as integer",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     saveOrder: 3,",
+						"     outputAssertFailedRows: true,",
+						"     mapColumn(",
+						"          customer_id,",
+						"          customer_name,",
+						"          address,",
+						"          city,",
+						"          state,",
+						"          zip_code,",
+						"          effective_date,",
+						"          end_date,",
+						"          record_effective_date,",
+						"          record_end_date,",
+						"          current_record_ind",
+						"     )) ~> InsertFreshData",
+						"AlterUpdate sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          customer_id as integer,",
+						"          customer_name as string,",
+						"          address as string,",
+						"          city as string,",
+						"          state as string,",
+						"          zip_code as string,",
+						"          effective_date as timestamp,",
+						"          end_date as timestamp,",
+						"          record_effective_date as timestamp,",
+						"          record_end_date as timestamp,",
+						"          current_record_ind as integer,",
+						"          surrogate_key as integer",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:false,",
+						"     updateable:true,",
+						"     upsertable:false,",
+						"     keys:['surrogate_key'],",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     saveOrder: 1,",
+						"     mapColumn(",
+						"          customer_id,",
+						"          customer_name,",
+						"          address,",
+						"          city,",
+						"          state,",
+						"          zip_code,",
+						"          effective_date,",
+						"          end_date,",
+						"          record_effective_date,",
+						"          record_end_date,",
+						"          current_record_ind,",
+						"          surrogate_key",
+						"     )) ~> UpdateTheRecords",
+						"derivedColumn1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          customer_id as integer,",
+						"          customer_name as string,",
+						"          address as string,",
+						"          city as string,",
+						"          state as string,",
+						"          zip_code as string,",
+						"          effective_date as timestamp,",
+						"          end_date as timestamp,",
+						"          record_effective_date as timestamp,",
+						"          record_end_date as timestamp,",
+						"          current_record_ind as integer,",
+						"          surrogate_key as integer",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     saveOrder: 2) ~> InsertOfUpdate"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ScdType2')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Data flow1",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "scd2",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"TgtAsSrc": {},
+									"source1": {},
+									"InsertFreshData": {},
+									"UpdateTheRecords": {},
+									"InsertOfUpdate": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-09-12T14:18:51Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/scd2')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/master')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "copyandgetMetadata",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "copyandgetMetadata",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "Scripttologalltrigger",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "copyandgetMetadata",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [
+							{
+								"name": "log",
+								"value": "test"
+							}
+						],
+						"linkedServiceName": {
+							"referenceName": "SqlServerlog",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": {
+										"value": "insert into logi.prac values(\r\n    '@{activity('copyandgetMetadata').output.pipelineReturnValue.triggertime}',\r\n    '@{activity('copyandgetMetadata').output.pipelineReturnValue.runid}',\r\n    '@{activity('copyandgetMetadata').output.pipelineReturnValue.lastModDate}')",
+										"type": "Expression"
+									}
+								}
+							],
+							"scriptBlockExecutionTimeout": "02:00:00"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "copy and log the data"
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-09-12T14:18:51Z"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Data flow1",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [
+							{
+								"name": "amazon",
+								"value": "split"
+							}
+						],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "amazonsplit",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source": {},
+									"sinkM": {},
+									"sinkC": {},
+									"sinkh": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2024-09-12T14:18:51Z"
+			},
+			"dependsOn": []
+		}
+	]
+}
