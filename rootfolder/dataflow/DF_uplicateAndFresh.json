@@ -1,0 +1,149 @@
+{
+	"name": "DF_uplicateAndFresh",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "srcDupliAndFresh",
+						"type": "DatasetReference"
+					},
+					"name": "FreshSource"
+				},
+				{
+					"dataset": {
+						"referenceName": "tgtDupliAndFresh",
+						"type": "DatasetReference"
+					},
+					"name": "frmTgtCompare"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "dupdupliAndfresh",
+						"type": "DatasetReference"
+					},
+					"name": "toDuplicate"
+				},
+				{
+					"dataset": {
+						"referenceName": "tgtDupliAndFresh",
+						"type": "DatasetReference"
+					},
+					"name": "toFreshEntry",
+					"description": "Add fresh sink dataset"
+				}
+			],
+			"transformations": [
+				{
+					"name": "lookup1"
+				},
+				{
+					"name": "select1"
+				},
+				{
+					"name": "obtainFreshValue"
+				},
+				{
+					"name": "tgtValue"
+				},
+				{
+					"name": "obtainduplicate"
+				},
+				{
+					"name": "duplicated"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          Name as string,",
+				"          Age as integer,",
+				"          Gender as string,",
+				"          State as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> FreshSource",
+				"source(output(",
+				"          Name as string,",
+				"          Age as integer,",
+				"          Gender as string,",
+				"          State as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> frmTgtCompare",
+				"FreshSource, tgtValue lookup(Name == tgt_Name,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> lookup1",
+				"obtainFreshValue select(mapColumn(",
+				"          Name,",
+				"          Age,",
+				"          Gender,",
+				"          State",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"lookup1 filter(isNull(tgt_Name)) ~> obtainFreshValue",
+				"frmTgtCompare select(mapColumn(",
+				"          tgt_Name = Name,",
+				"          tgt_Age = Age,",
+				"          tgt_Gender = Gender,",
+				"          tgt_State = State",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> tgtValue",
+				"lookup1 filter(!isNull(tgt_Name)) ~> obtainduplicate",
+				"obtainduplicate select(mapColumn(",
+				"          Name,",
+				"          Age,",
+				"          Gender,",
+				"          State",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> duplicated",
+				"duplicated sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Name as string,",
+				"          Age as string,",
+				"          Gender as string,",
+				"          State as string",
+				"     ),",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     mapColumn(",
+				"          Name,",
+				"          Age,",
+				"          Gender,",
+				"          State",
+				"     )) ~> toDuplicate",
+				"select1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          Name as string,",
+				"          Age as string,",
+				"          Gender as string,",
+				"          State as string",
+				"     ),",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     mapColumn(",
+				"          Name,",
+				"          Age,",
+				"          Gender,",
+				"          State",
+				"     )) ~> toFreshEntry"
+			]
+		}
+	}
+}
