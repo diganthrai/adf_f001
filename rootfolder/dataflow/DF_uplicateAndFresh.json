@@ -22,38 +22,38 @@
 			"sinks": [
 				{
 					"dataset": {
-						"referenceName": "dupdupliAndfresh",
-						"type": "DatasetReference"
-					},
-					"name": "toDuplicate"
-				},
-				{
-					"dataset": {
 						"referenceName": "tgtDupliAndFresh",
 						"type": "DatasetReference"
 					},
 					"name": "toFreshEntry",
 					"description": "Add fresh sink dataset"
+				},
+				{
+					"dataset": {
+						"referenceName": "dupdupliAndfresh",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
 				}
 			],
 			"transformations": [
 				{
-					"name": "lookup1"
-				},
-				{
-					"name": "select1"
-				},
-				{
-					"name": "obtainFreshValue"
+					"name": "fresh"
 				},
 				{
 					"name": "tgtValue"
 				},
 				{
-					"name": "obtainduplicate"
+					"name": "duplicated"
 				},
 				{
-					"name": "duplicated"
+					"name": "alterRow1"
+				},
+				{
+					"name": "alterRow2"
+				},
+				{
+					"name": "splitfresh"
 				}
 			],
 			"scriptLines": [
@@ -75,19 +75,14 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false) ~> frmTgtCompare",
-				"FreshSource, tgtValue lookup(Name == tgt_Name,",
-				"     multiple: false,",
-				"     pickup: 'any',",
-				"     broadcast: 'auto')~> lookup1",
-				"obtainFreshValue select(mapColumn(",
+				"splitfresh@fresh select(mapColumn(",
 				"          Name,",
 				"          Age,",
 				"          Gender,",
 				"          State",
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> select1",
-				"lookup1 filter(isNull(tgt_Name)) ~> obtainFreshValue",
+				"     skipDuplicateMapOutputs: true) ~> fresh",
 				"frmTgtCompare select(mapColumn(",
 				"          tgt_Name = Name,",
 				"          tgt_Age = Age,",
@@ -96,8 +91,7 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> tgtValue",
-				"lookup1 filter(!isNull(tgt_Name)) ~> obtainduplicate",
-				"obtainduplicate select(mapColumn(",
+				"splitfresh@duplicate select(mapColumn(",
 				"          Name,",
 				"          Age,",
 				"          Gender,",
@@ -105,7 +99,11 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> duplicated",
-				"duplicated sink(allowSchemaDrift: true,",
+				"duplicated alterRow(insertIf(1==1)) ~> alterRow1",
+				"fresh alterRow(insertIf(1==1)) ~> alterRow2",
+				"FreshSource split(isNull(tgt_Name),",
+				"     disjoint: false) ~> splitfresh@(fresh, duplicate)",
+				"alterRow2 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
 				"          Name as string,",
@@ -123,8 +121,9 @@
 				"          Age,",
 				"          Gender,",
 				"          State",
-				"     )) ~> toDuplicate",
-				"select1 sink(allowSchemaDrift: true,",
+				"     ),",
+				"     partitionBy('hash', 1)) ~> toFreshEntry",
+				"alterRow1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
 				"          Name as string,",
@@ -136,13 +135,7 @@
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true,",
-				"     mapColumn(",
-				"          Name,",
-				"          Age,",
-				"          Gender,",
-				"          State",
-				"     )) ~> toFreshEntry"
+				"     skipDuplicateMapOutputs: true) ~> sink1"
 			]
 		}
 	}
