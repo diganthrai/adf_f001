@@ -1,0 +1,26 @@
+{
+	"name": "DSuniquetgt",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "dupliAndFresh",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "personalproject ls"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "task01output",
+				"fileSystem": "task01"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}

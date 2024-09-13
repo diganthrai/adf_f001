@@ -54,6 +54,9 @@
 				},
 				{
 					"name": "splitfresh"
+				},
+				{
+					"name": "lookup1"
 				}
 			],
 			"scriptLines": [
@@ -101,8 +104,12 @@
 				"     skipDuplicateMapOutputs: true) ~> duplicated",
 				"duplicated alterRow(insertIf(1==1)) ~> alterRow1",
 				"fresh alterRow(insertIf(1==1)) ~> alterRow2",
-				"FreshSource split(isNull(tgt_Name),",
+				"lookup1 split(isNull(tgt_Name),",
 				"     disjoint: false) ~> splitfresh@(fresh, duplicate)",
+				"FreshSource, tgtValue lookup(Name == tgt_Name,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> lookup1",
 				"alterRow2 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     input(",
