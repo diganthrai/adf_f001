@@ -8,14 +8,72 @@
 		"typeProperties": {
 			"sources": [
 				{
+					"dataset": {
+						"referenceName": "DSuniqueSource",
+						"type": "DatasetReference"
+					},
 					"name": "source1"
 				}
 			],
 			"sinks": [],
-			"transformations": [],
+			"transformations": [
+				{
+					"name": "window1"
+				},
+				{
+					"name": "cast1"
+				},
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "split1"
+				},
+				{
+					"name": "select1"
+				},
+				{
+					"name": "select2"
+				}
+			],
 			"scriptLines": [
-				"source(allowSchemaDrift: true,",
-				"     validateSchema: false) ~> source1"
+				"source(output(",
+				"          ID as string,",
+				"          Name as string,",
+				"          Age as string,",
+				"          Gender as string,",
+				"          State as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> source1",
+				"cast1 window(asc(ID, true),",
+				"     prev_id = lag(ID, 1,0)) ~> window1",
+				"source1 cast(output(",
+				"          ID as integer",
+				"     ),",
+				"     errors: true) ~> cast1",
+				"window1 derive(flag = iif(lesser(prev_id, ID),1,0)) ~> derivedColumn1",
+				"derivedColumn1 split(flag==1,",
+				"     disjoint: false) ~> split1@(unique, duplicate)",
+				"split1@unique select(mapColumn(",
+				"          ID,",
+				"          Name,",
+				"          Age,",
+				"          Gender,",
+				"          State",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"split1@duplicate select(mapColumn(",
+				"          ID,",
+				"          Name,",
+				"          Age,",
+				"          Gender,",
+				"          State",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select2"
 			]
 		}
 	}
