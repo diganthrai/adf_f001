@@ -1,6 +1,18 @@
 {
 	"name": "unique",
 	"properties": {
+		"variables": {
+			"var1": {
+				"type": "String",
+				"defaultValue": "0"
+			},
+			"idval": {
+				"type": "Array"
+			},
+			"final": {
+				"type": "Array"
+			}
+		},
 		"folder": {
 			"name": "personal projects"
 		},
