@@ -5,12 +5,18 @@
 			"referenceName": "AzureDataLakeStorage1",
 			"type": "LinkedServiceReference"
 		},
+		"parameters": {
+			"fileName": {
+				"type": "String",
+				"defaultValue": "*.json"
+			}
+		},
 		"annotations": [],
 		"type": "Json",
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": "sales_wordpiece_cap.json",
+				"fileName": "StoreSales.json",
 				"folderPath": "json",
 				"fileSystem": "datasets"
 			}
