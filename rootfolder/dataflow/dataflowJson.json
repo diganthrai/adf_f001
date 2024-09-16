@@ -53,7 +53,8 @@
 				"          version,",
 				"          truncation,",
 				"          padding,",
-				"          added_tokens",
+				"          addedtokenId = added_tokens.id,",
+				"          content = added_tokens.content",
 				"     ),",
 				"     skipDuplicateMapInputs: false,",
 				"     skipDuplicateMapOutputs: false) ~> flatten1"
